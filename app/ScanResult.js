@@ -23,7 +23,8 @@ import {
 import { forEach } from 'lodash';
 // import { Toast } from '@ant-design/react-native';
 import Toast from 'react-native-root-toast';
-const StatusColors = ['#3DCD58', '#F53F3F', '#1F1F1F', '#3491FA', '#FAAD14', '#F53F3F', 'red']
+import Colors, {isDarkMode} from "../../../app/utils/const/Colors";
+import SndAlert from "../../../app/utils/components/SndAlert";
 const StatusTags = [
   localStr('lang_scan_result_page_status_tag1'),
   localStr('lang_scan_result_page_status_tag2'),
@@ -119,7 +120,7 @@ export default class extends Component {
         // });
       } else {
         //给出提示
-        Alert.alert("", data.msg || localStr('lang_ticket_detail_set_status_error'), [
+        SndAlert.alert( data.msg || localStr('lang_ticket_detail_set_status_error'), '', [
           { text: localStr('lang_ticket_filter_ok'), onPress: () => { } }
         ]);
       }
@@ -165,16 +166,16 @@ export default class extends Component {
   }
   _renderResult() {
     return (
-      <View style={{ backgroundColor: '#fff', borderRadius: 12, margin: 16, padding: 16 }}>
-        <View style={{ borderBottomColor: '#F0F0F0', borderBottomWidth: 1, paddingBottom: 16 }}>
-          <Text style={{ color: '#1F1F1F', fontSize: 15, fontWeight: '500' }}>{localStr('lang_scan_result_label1')}</Text>
+      <View style={{ backgroundColor: Colors.seBgContainer, borderRadius: 12, margin: 16, padding: 16 }}>
+        <View style={{ borderBottomColor: Colors.seBorderSplit, borderBottomWidth: 1, paddingBottom: 16 }}>
+          <Text style={{ color: Colors.seTextTitle, fontSize: 15, fontWeight: '500' }}>{localStr('lang_scan_result_label1')}</Text>
         </View>
 
         <View style={{
-          flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomColor: '#F0F0F0',
+          flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomColor: Colors.seBorderSplit,
           borderBottomWidth: 1
         }}>
-          <Text style={{ color: '#595959', fontSize: 15 }}>
+          <Text style={{ color: Colors.seTextPrimary, fontSize: 15 }}>
             {localStr('lang_scan_result_label1')}
           </Text>
           <View style={{ flex: 1 }} />
@@ -182,24 +183,24 @@ export default class extends Component {
           {this._renderRadio(localStr('lang_scan_result_label3'), this.state.inventoryType === 2, () => this.setState({ inventoryType: 2, statusType: 4 }))}
         </View>
         {this.state.inventoryType === 1 && (<View style={{
-          flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomColor: '#F0F0F0',
+          flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomColor: Colors.seBorderSplit,
           borderBottomWidth: 1
         }}>
-          <Text style={{ color: '#595959', fontSize: 15 }}>
+          <Text style={{ color: Colors.seTextPrimary, fontSize: 15 }}>
             {localStr('lang_scan_result_label4')}
           </Text>
-          <Text style={{ color: '#BFBFBF', fontSize: 15 }}>
+          <Text style={{ color: Colors.seTextDisabled, fontSize: 15 }}>
             {localStr('lang_scan_result_label5')}
           </Text>
           <View style={{ flex: 1 }} />
           {this.state.tags.map(item => this._renderTag(item))}
         </View>)}
         <TextInput
-          style={{ fontSize: 15, lineHeight: 23, color: '#1f1f1f', paddingVertical: 6, marginTop: 10 }}
+          style={{ fontSize: 15, lineHeight: 23, color: Colors.seTextPrimary, paddingVertical: 6, marginTop: 10 }}
           underlineColorAndroid={'transparent'}
           textAlign={'left'}
           multiline={true}
-          placeholderTextColor={'#BFBFBF'}
+          placeholderTextColor={Colors.seTextDisabled}
           textAlignVertical={'top'}
           placeholder={localStr('lang_scan_result_label6')}
           onChangeText={(text) => this.setState({ remark: text })}
@@ -211,17 +212,17 @@ export default class extends Component {
   _renderRadio(name, sel, cb) {
     return (
       <TouchableOpacity style={{ marginLeft: 12, flexDirection: 'row', alignItems: 'center', paddingVertical: 6 }} onPress={cb}>
-        <View style={{ width: 16, height: 16, alignItems: 'center', justifyContent: 'center', borderRadius: 8, borderWidth: 1, borderColor: sel ? GREEN : '#D9D9D9' }}>
-          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: sel ? GREEN : '#fff' }} />
+        <View style={{ width: 16, height: 16, alignItems: 'center', justifyContent: 'center', borderRadius: 8, borderWidth: 1, borderColor: sel ? Colors.seBrandNomarl : Colors.seBorderBase }}>
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: sel ? Colors.seBrandNomarl : Colors.seBgContainer }} />
         </View>
-        <Text style={{ fontSize: 15, color: '#1f1f1f', marginLeft: 6 }}>{name}</Text>
+        <Text style={{ fontSize: 15, color: Colors.seTextTitle, marginLeft: 6 }}>{name}</Text>
       </TouchableOpacity>
     )
   }
 
   _renderTag(item) {
-    let bg = item.sel ? '#F0FFF0' : '#F5F5F5';
-    let fg = item.sel ? GREEN : '#595959';
+    let bg = item.sel ? Colors.seSuccessBg : Colors.seFill3;
+    let fg = item.sel ? Colors.seSuccessNormal : Colors.seTextPrimary;
     return (
       <TouchableOpacity key={item.tag} onPress={() => {
         item.sel = !item.sel
@@ -248,20 +249,73 @@ export default class extends Component {
     })
   }
 
+  _getStatusInfo(deviceStatus) {
+    let ret = {
+      label: localStr('lang_scan_result_label7'),
+      textColor: Colors.seBrandNomarl,
+      bgColor:  Colors.seBrandBg,
+      borderColor: Colors.seBrandBorder,
+    };
+    switch (deviceStatus) {
+      case 0:
+        ret.label = localStr('lang_scan_result_page_status_tag1');
+        ret.textColor = Colors.seBrandNomarl;
+        ret.borderColor = Colors.seBrandBorder
+        ret.bgColor = Colors.seBrandBg;
+        break;
+      case 1:
+        ret.label = localStr('lang_scan_result_page_status_tag2');
+        ret.textColor = Colors.seErrorNormal;
+        ret.borderColor = Colors.seErrorBorder;
+        ret.bgColor = Colors.seErrorBg;
+        break;
+      case 2:
+        ret.label = localStr('lang_scan_result_page_status_tag3');
+        ret.textColor = Colors.seTextTitle;
+        ret.borderColor = Colors.seBorderBase;
+        ret.bgColor = Colors.seFill3;
+        break;
+      case 3:
+        ret.label = localStr('lang_scan_result_page_status_tag4');
+        ret.textColor = Colors.seInfoNormal;
+        ret.borderColor = Colors.seInfoBorder;
+        ret.bgColor = Colors.seInfoBg;
+        break;
+      case 4:
+        ret.label = localStr('lang_scan_result_page_status_tag5');
+        ret.textColor = Colors.seWarningNormal;
+        ret.borderColor = Colors.seWarningBorder;
+        ret.bgColor = Colors.seWarningBg;
+        break;
+      case 5:
+        ret.label = localStr('lang_scan_result_page_status_tag6');
+        ret.textColor = Colors.seErrorNormal;
+        ret.borderColor = Colors.seErrorBorder;
+        ret.bgColor = Colors.seErrorBg;
+        break;
+    }
+    return ret;
+  }
+
   _renderStatusTag() {
-    let color = 'gray';
+    let textColor = '';
+    let bgColor = '';
+    let borderColor = '';
     let tag = localStr('lang_scan_result_label7');
     if (!this.state.isRequestStatus) {
-      tag = StatusTags[this.state.deviceStatus];
-      color = StatusColors[this.state.deviceStatus];
+      let res = this._getStatusInfo(this.state.deviceStatus);
+      tag = res.label;
+      bgColor = res.bgColor;
+      borderColor = res.borderColor;
+      textColor = res.textColor;
     }
     return (
       <TouchableOpacity disabled={true || this.state.statusType === 4} onPress={this._showStatusTagsDialog}>
         <View style={{
-          borderRadius: 2, paddingHorizontal: 6, marginLeft: 6,
-          borderWidth: 1, borderColor: color, paddingVertical: 2, justifyContent: 'center', alignItems: 'center'
+          borderRadius: 4, paddingHorizontal: 6, marginLeft: 6,backgroundColor: bgColor,
+          borderWidth: 0.8, borderColor: borderColor, paddingVertical: 2, justifyContent: 'center', alignItems: 'center'
         }}>
-          <Text style={{ color, fontSize: 12 }}>{tag}</Text>
+          <Text style={{ color: textColor, fontSize: 12 }}>{tag}</Text>
         </View>
       </TouchableOpacity>
     )
@@ -296,7 +350,7 @@ export default class extends Component {
       assetCode = this.props.device.extensionProperties.assetCode;
     }
     return (
-      <View style={{ flex: 1, backgroundColor: '#F4F6F8' }}>
+      <View style={{ flex: 1, backgroundColor: Colors.seBgLayout }}>
         <Toolbar
           title={localStr('lang_scan_result_label8')}
           navIcon="back"
@@ -304,29 +358,31 @@ export default class extends Component {
             this.props.navigator.pop()
           }}
           actions={[]}
+          color={Colors.seBrandNomarl}
+          borderColor={Colors.seBrandNomarl}
           onActionSelected={[]}
         />
         <View style={{
-          flexDirection: 'row', alignItems: 'center', marginTop: 10, marginHorizontal: 16, borderTopColor: '#f5f5f5',
-          borderTopWidth: 1, paddingTop: 10, backgroundColor: '#fff', borderRadius: 12, margin: 16, padding: 16, marginBottom: 0,
+          flexDirection: 'row', alignItems: 'center', marginTop: 10, marginHorizontal: 16,
+          borderTopWidth: 1, paddingTop: 10, backgroundColor: Colors.seBgContainer, borderRadius: 12, margin: 16, padding: 16, marginBottom: 0,
         }}>
-          <CacheImage borderWidth={1} imageKey={this.state.imgUrl} defaultImgPath={require('./images/building_default/building.png')} width={70} height={50} />
+          <CacheImage imageKey={this.state.imgUrl} borderWidth={0} defaultImgPath={isDarkMode() ? require('./images/building_default/placeholder.png') : require('./images/building_default/building.png')} width={96} height={54} />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: '#333', fontSize: 14, flex: 1 }}>{this.props.device.assetName}</Text>
+              <Text style={{ color: Colors.seTextTitle, fontSize: 14, flex: 1 }}>{this.props.device.assetName}</Text>
               {this._renderStatusTag()}
             </View>
 
-            <Text style={{ color: '#666', fontSize: 12, marginTop: 8 }}>{`${localStr("lang_scan_result_label10")}：${assetCode}`}</Text>
+            <Text style={{ color: Colors.seTextPrimary, fontSize: 12, marginTop: 8 }}>{`${localStr("lang_scan_result_label10")}：${assetCode}`}</Text>
           </View>
         </View>
         {this._renderResult()}
-        <View style={{ backgroundColor: '#fff', position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingTop: 12, paddingBottom: isPhoneX() ? 32 : 16, }}>
+        <View style={{ backgroundColor: Colors.seBgContainer, position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16, paddingTop: 12, paddingBottom: isPhoneX() ? 32 : 16, }}>
           <TouchableOpacity style={{
             height: 40,
-            backgroundColor: GREEN, borderRadius: 8, alignItems: 'center', justifyContent: 'center'
+            backgroundColor: Colors.seBrandNomarl, borderRadius: 8, alignItems: 'center', justifyContent: 'center'
           }} onPress={this._submitResult}>
-            <Text style={{ fontSize: 17, color: '#fff' }}>{localStr('lang_scan_result_label9')}</Text>
+            <Text style={{ fontSize: 17, color: Colors.seTextInverse }}>{localStr('lang_scan_result_label9')}</Text>
           </TouchableOpacity>
         </View>
 

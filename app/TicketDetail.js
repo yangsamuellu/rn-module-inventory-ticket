@@ -8,7 +8,7 @@ import {
   ScrollView,
   Platform,
   DeviceEventEmitter,
-  Text, Dimensions, Alert, TouchableOpacity, TouchableWithoutFeedback, Modal, Image, InteractionManager
+  Text, Dimensions, Alert, TouchableOpacity, TouchableWithoutFeedback, Modal, Image, InteractionManager, Appearance
 } from 'react-native';
 
 import Toolbar from './components/Toolbar';
@@ -43,7 +43,7 @@ const STATE_CLOSED = 50
 const STATE_REJECTED = 40
 const REJECT_OPERATION_TYPE = 34
 
-import { localStr } from "./utils/Localizations/localization";
+import {getLanguage, localStr} from "./utils/Localizations/localization";
 import NetworkImage from './components/NetworkImage'
 import {
   apiCheckDeviceStatus,
@@ -75,6 +75,8 @@ import privilegeHelper, { CodeMap } from "./utils/privilegeHelper";
 import Scan from "./Scan";
 import DeviceAdd from "./DeviceAdd";
 import { Toast } from '@ant-design/react-native';
+import Colors, {AppearanceMode, isDarkMode} from "../../../app/utils/const/Colors";
+import SndAlert from "../../../app/utils/components/SndAlert";
 // import Share from "react-native-share";
 
 
@@ -84,6 +86,47 @@ const DEVICE_STATUS_ICON = {
   2: require('./images/device_status/device_already_pd.png'),
   3: require('./images/device_status/device_loss.png'),
   4: require('./images/device_status/device_new.png'),
+}
+
+const DEVICE_STATUS_ICON2 = ()=>{
+  return {
+    dark_loss_zh:require('./images/device_status/pk-Dark-cn.png'),
+    dark_loss_en:require('./images/device_status/pk-Dark-en.png'),
+    light_loss_zh:require('./images/device_status/pk-Light-cn.png'),
+    light_loss_en:require('./images/device_status/pk-Light-en.png'),
+    dark_gain_zh:require('./images/device_status/py-Dark-cn.png'),
+    dark_gain_en:require('./images/device_status/py-Dark-en.png'),
+    light_gain_zh:require('./images/device_status/py-Light-cn.png'),
+    light_gain_en:require('./images/device_status/py-Light-en.png'),
+    dark_checked_zh:require('./images/device_status/yp-Dark-cn.png'),
+    dark_checked_en:require('./images/device_status/yp-Dark-en.png'),
+    light_checked_zh:require('./images/device_status/yp-Light-cn.png'),
+    light_checked_en:require('./images/device_status/yp-Light-en.png'),
+  }
+}
+
+function getInventoryIcon(status) {
+  let lang = getLanguage();
+  let theme = Appearance.getColorScheme();
+  let light = 'light'
+  switch (status) {
+    case 2:
+      return lang === 'en' ?
+          theme === light ? DEVICE_STATUS_ICON2().light_checked_en : DEVICE_STATUS_ICON2().dark_checked_en
+          :
+          theme === light ? DEVICE_STATUS_ICON2().light_checked_zh : DEVICE_STATUS_ICON2().dark_checked_zh
+    case 3:
+      return lang === 'en' ?
+          theme === light ? DEVICE_STATUS_ICON2().light_loss_en : DEVICE_STATUS_ICON2().dark_loss_en
+          :
+          theme === light ? DEVICE_STATUS_ICON2().light_loss_zh : DEVICE_STATUS_ICON2().dark_loss_zh
+    case 4:
+      return lang === 'en' ?
+          theme === light ? DEVICE_STATUS_ICON2().light_gain_en : DEVICE_STATUS_ICON2().dark_gain_en
+          :
+          theme === light ? DEVICE_STATUS_ICON2().light_gain_zh : DEVICE_STATUS_ICON2().dark_gain_zh
+
+  }
 }
 
 class Avatar extends Component {
@@ -129,12 +172,12 @@ export default class TicketDetail extends Component {
 
   _renderInventoryTicketInfo() {
     return (
-      <View style={{ margin: 16, padding: 16, backgroundColor: "#fff", borderRadius: 12 }}>
-        <Text style={{ fontSize: 16, color: '#333', fontWeight: '600' }}>{this.state.rowData.title}</Text>
-        <Text style={{ fontSize: 12, color: '#666', marginVertical: 8 }}>
+      <View style={{ margin: 16, padding: 16, backgroundColor: Colors.seBgContainer, borderRadius: 12 }}>
+        <Text style={{ fontSize: 16, color: Colors.seTextTitle, fontWeight: 'bold' }}>{this.state.rowData.title}</Text>
+        <Text style={{ fontSize: 12, color: Colors.seTextSecondary, marginVertical: 8 }}>
           {`${localStr('lang_ticket_detail_execute_time')}：${moment(this.state.rowData.startTime).format('YYYY-MM-DD')} ~ ${moment(this.state.rowData.endTime).format('YYYY-MM-DD')}`}
         </Text>
-        <Text style={{ fontSize: 12, lineHeight: 20, color: '#666', }}>{`${localStr('lang_ticket_detail_execute_person')}：${this.state.rowData.executors.map(item => item.userName).join('、')}`}</Text>
+        <Text style={{ fontSize: 12, lineHeight: 20, color: Colors.seTextSecondary, }}>{`${localStr('lang_ticket_detail_execute_person')}：${this.state.rowData.executors.map(item => item.userName).join('、')}`}</Text>
       </View>
     )
   }
@@ -232,13 +275,13 @@ export default class TicketDetail extends Component {
     let createDate = moment(rowData.createTime).format('YYYY-MM-DD HH:mm:ss');
     return (
       <View style={{
-        paddingBottom: 16, paddingTop: 16, paddingLeft: 16, paddingRight: 16, backgroundColor: LIST_BG, marginTop: -2
+        paddingBottom: 16, paddingTop: 16, paddingLeft: 16, paddingRight: 16, backgroundColor: Colors.seBgLayout, marginTop: -2
         , alignItems: 'center'
       }}>
-        <Text numberOfLines={1} style={{ fontSize: 13, color: '#999' }}>
+        <Text numberOfLines={1} style={{ fontSize: 13, color: Colors.seTextDisabled }}>
           {`${localStr('lang_ticket_detail_ticketId')}:${strId}`}
         </Text>
-        <Text numberOfLines={1} style={{ fontSize: 13, color: '#999', marginTop: 6 }}>
+        <Text numberOfLines={1} style={{ fontSize: 13, color: Colors.seTextDisabled, marginTop: 6 }}>
           {`${rowData.createUserName} ${localStr('lang_ticket_detail_create_time')}${createDate}`}
         </Text>
       </View>
@@ -248,7 +291,7 @@ export default class TicketDetail extends Component {
   _getTab() {
     return (
       <View style={{ height: 48, justifyContent: 'flex-end' }}>
-        <Text style={{ fontSize: 17, marginBottom: 8, fontWeight: '600', color: '#333' }}>{`${localStr('lang_ticket_detail_log')}(${this.state.rowData.ticketLogs.length})`}</Text>
+        <Text style={{ fontSize: 17, marginBottom: 8, fontWeight: '600', color: Colors.text.primary }}>{`${localStr('lang_ticket_detail_log')}(${this.state.rowData.ticketLogs.length})`}</Text>
       </View>
     )
   }
@@ -279,9 +322,10 @@ export default class TicketDetail extends Component {
       }, {
         title: localStr('lang_ticket_detail_del_log'),
         click: () => {
-          Alert.alert(
-            '',
+          SndAlert.alert(
+
             localStr('lang_ticket_log_del_confirm'),
+              '',
             [
               { text: localStr('lang_ticket_filter_cancel'), onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
               {
@@ -296,7 +340,7 @@ export default class TicketDetail extends Component {
                       rowData.ticketLogs = [].concat(rowData.ticketLogs);
                       this.setState({ rowData })
                     } else {
-                      Alert.alert(localStr('lang_alert_title'), res.msg);
+                      SndAlert.alert(localStr('lang_alert_title'), res.msg);
                     }
                   })
                 }
@@ -366,7 +410,7 @@ export default class TicketDetail extends Component {
         // this.props.ticketChanged && this.props.ticketChanged();
         console.warn('------更新AssetID成功:', body, ret);
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
   }
@@ -411,7 +455,7 @@ export default class TicketDetail extends Component {
         }
 
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
   }
@@ -448,7 +492,7 @@ export default class TicketDetail extends Component {
         this.showToast(localStr('lang_add_scrap_ticket_tip'))
 
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
   }
@@ -499,7 +543,7 @@ export default class TicketDetail extends Component {
 
       } else {
         //给出提示
-        Alert.alert("", data.msg || localStr('lang_ticket_detail_set_status_error'), [
+        SndAlert.alert(data.msg || localStr('lang_ticket_detail_set_status_error'), "", [
           { text: localStr('lang_ticket_filter_ok'), onPress: () => { } }
         ]);
       }
@@ -532,7 +576,7 @@ export default class TicketDetail extends Component {
         this.showToast(localStr('lang_ticket_close_toast'))
         this._loadTicketDetail();
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
 
@@ -577,17 +621,17 @@ export default class TicketDetail extends Component {
 
   _renderSubmittedButton() {
     return (
-      <Bottom borderColor={'#f2f2f2'} style={{ paddingTop: 12 }} backgroundColor={'#fff'}>
+      <Bottom borderColor={Colors.transparent} backgroundColor={Colors.seBgContainer}>
         <Button
           style={[styles.button, {
-            backgroundColor: GREEN,
+            backgroundColor: Colors.seBrandNomarl,
             marginLeft: 16,
             flex: 1,
             borderRadius: 8,
           }]}
           textStyle={{
             fontSize: 16,
-            color: '#ffffff'
+            color: Colors.seTextInverse
           }}
           text={localStr('lang_ticket_detail_approved')}
           onClick={() => this._showSubmitDialog()} />
@@ -602,7 +646,7 @@ export default class TicketDetail extends Component {
         // this.showToast(localStr('lang_ticket_execute_toast'))
         this._loadTicketDetail();
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
   }
@@ -624,9 +668,9 @@ export default class TicketDetail extends Component {
   }
 
   _doIgnore() {
-    Alert.alert(
-      '',
+    SndAlert.alert(
       localStr('lang_ticket_detail_ignore_confirm'),
+        '',
       [
         { text: localStr('lang_ticket_filter_cancel'), onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
         {
@@ -638,7 +682,7 @@ export default class TicketDetail extends Component {
                 this.props.ticketChanged && this.props.ticketChanged();
                 this._loadTicketDetail();
               } else {
-                Alert.alert(localStr('lang_alert_title'), ret.msg);
+                SndAlert.alert(localStr('lang_alert_title'), ret.msg);
               }
             })
           }
@@ -659,7 +703,7 @@ export default class TicketDetail extends Component {
         this._loadTicketDetail();
         this.showToast(localStr('lang_ticket_detail_submit_success'));
       } else {
-        Alert.alert(localStr('lang_alert_title'), ret.msg);
+        SndAlert.alert(localStr('lang_alert_title'), ret.msg);
       }
     })
   }
@@ -670,41 +714,19 @@ export default class TicketDetail extends Component {
 
   _getButton(isScollView) {
     let status = this.state.rowData.ticketState;
-    // status = STATE_NOT_START
-    let logButton = (
-      <TouchFeedback style={{}}
-        onPress={() => {
-          this._writeLog();
-        }}>
-        <View style={{ minWidth: 50, minHeight: 50, justifyContent: 'center', alignItems: 'center' }}>
-          <Icon type='icon_ticket_log' size={16} color={'#333'} />
-          <Text style={{ fontSize: 12, color: '#333', marginTop: 3 }}>{localStr('lang_ticket_detail_write_log')}</Text>
-        </View>
-      </TouchFeedback>
-    );
     if ((this.state.isExecutor && status === STATE_NOT_START && privilegeHelper.hasAuth(CodeMap.AssetTicketExecute)) && !isScollView) {
       let btnLabel = localStr('lang_ticket_detail_begin_execute');
       //还需要判断是否是创建者和有工单执行权限
       return (
-        <Bottom borderColor={'#f2f2f2'} style={{ paddingTop: 12 }} backgroundColor={'#fff'}>
+        <Bottom borderColor={Colors.transparent} backgroundColor={Colors.seBgContainer}>
+
           <Button
             style={[styles.button, {
-              borderWidth: 1, borderColor: '#888', display: 'none',
-              backgroundColor: '#fff', marginLeft: 16, flex: 1, marginRight: 0
+              backgroundColor: Colors.seBrandNomarl, marginLeft: 16, flex: 1, borderRadius: 8
             }]}
             textStyle={{
               fontSize: 16,
-              color: '#888'
-            }}
-            text={localStr('lang_ticket_detail_ignore')}
-            onClick={() => this._doIgnore()} />
-          <Button
-            style={[styles.button, {
-              backgroundColor: GREEN, marginLeft: 16, flex: 2, borderRadius: 8
-            }]}
-            textStyle={{
-              fontSize: 16,
-              color: '#ffffff'
+              color: Colors.seTextInverse
             }}
             text={btnLabel} onClick={this._executeTicket} />
         </Bottom>
@@ -717,27 +739,27 @@ export default class TicketDetail extends Component {
     //执行中和已驳回操作一样
     if (this.state.isExecutor && (status === STATE_STARTING || status === STATE_REJECTED) && privilegeHelper.hasAuth(CodeMap.AssetTicketExecute) && !isScollView) {
       return (
-        <Bottom borderColor={'#f2f2f2'} style={{ paddingTop: 12 }} backgroundColor={'#fff'}>
+        <Bottom borderColor={Colors.transparent} backgroundColor={Colors.seBgContainer}>
           {/* <View style={{ flexDirection: 'row', flex: 1 }}>
             <View style={{ flex: 1 }}>
               {logButton}
             </View>
           </View> */}
-          <View style={{ flex: 3, alignItems: 'center', marginHorizontal: 16, flexDirection: 'row', height: 40, borderRadius: 8, backgroundColor: GREEN, }}>
+          <View style={{ flex: 3, alignItems: 'center', marginHorizontal: 16, flexDirection: 'row', height: 40, borderRadius: 8, backgroundColor: Colors.seBrandNomarl, }}>
             <TouchableOpacity style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onPress={this._addNewInventory}>
-              <Text style={{ color: '#fff', fontSize: 14 }}>{localStr('lang_ticket_detail_add_device')}</Text>
+              <Text style={{ color: Colors.seTextInverse, fontSize: 14 }}>{localStr('lang_ticket_detail_add_device')}</Text>
             </TouchableOpacity>
-            <View style={{ width: 1, height: 20, backgroundColor: '#64D975' }} />
+            <View style={{ width: 1, height: 20, backgroundColor: Colors.seBrandHoverd }} />
             {!this.state.canScan ? null :
               <>
                 <TouchableOpacity style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onPress={this._scanInventory}>
-                  <Text style={{ color: '#fff', fontSize: 14 }}>{localStr('lang_ticket_detail_scan_device')}</Text>
+                  <Text style={{ color: Colors.seTextInverse, fontSize: 14 }}>{localStr('lang_ticket_detail_scan_device')}</Text>
                 </TouchableOpacity>
-                <View style={{ width: 1, height: 20, backgroundColor: '#64D975' }} />
+                <View style={{ width: 1, height: 20, backgroundColor: Colors.seBrandHoverd }} />
               </>
             }
             <TouchableOpacity style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }} onPress={() => this._submitTicket()}>
-              <Text style={{ color: '#fff', fontSize: 14 }}>{localStr('lang_ticket_detail_submit_ticket')}</Text>
+              <Text style={{ color: Colors.seTextInverse, fontSize: 14 }}>{localStr('lang_ticket_detail_submit_ticket')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -794,7 +816,7 @@ export default class TicketDetail extends Component {
           if (type == 'device') {
             let device = this.state.rowData.assets.find((item) => item.assetId === result.DeviceId);
             if (!device) {
-              Alert.alert(localStr('lang_ticket_detail_not_include_device'), null,
+              SndAlert.alert(localStr('lang_ticket_detail_not_include_device'), null,
                 [
                   {
                     text: localStr('lang_scan_page_alert_error_button'), onPress: () => {
@@ -818,9 +840,9 @@ export default class TicketDetail extends Component {
     if (device.extensionProperties?.assetPointCheckState !== 4) {
       return;
     }
-    Alert.alert(
-      '',
+    SndAlert.alert(
       localStr(localStr('lang_ticket_detail_delete_device_confirm')),
+        '',
       [
         { text: localStr('lang_ticket_filter_cancel'), onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
         {
@@ -832,7 +854,7 @@ export default class TicketDetail extends Component {
               if (res.code === CODE_OK) {
                 this._loadTicketDetail();
               } else {
-                Alert.alert(localStr('lang_alert_title'), res.msg);
+                SndAlert.alert(localStr('lang_alert_title'), res.msg);
               }
             })
           }
@@ -912,7 +934,7 @@ export default class TicketDetail extends Component {
                           this._loadTicketDetail();
                         } else {
                           //出错信息
-                          Alert.alert(localStr('lang_alert_title'), ret.msg)
+                          SndAlert.alert(localStr('lang_alert_title'), ret.msg)
                         }
                       })
                     },
@@ -944,7 +966,7 @@ export default class TicketDetail extends Component {
                           this.props.ticketChanged && this.props.ticketChanged();
                           this._loadTicketDetail();
                         } else {
-                          Alert.alert(localStr('lang_alert_title'), res.msg)
+                          SndAlert.alert(localStr('lang_alert_title'), res.msg)
                         }
                       })
                     },
@@ -961,6 +983,8 @@ export default class TicketDetail extends Component {
       <Toolbar
         title={localStr('lang_ticket_detail')}
         navIcon="back"
+        color={Colors.seBrandNomarl}
+        borderColor={Colors.seBrandNomarl}
         onIconClicked={() => {
           this.props.navigator.pop()
         }}
@@ -1006,7 +1030,7 @@ export default class TicketDetail extends Component {
         this._loadTicketDetail();
       } else {
         //给出提示
-        Alert.alert("", data.msg || localStr('lang_ticket_detail_set_status_error'), [
+        SndAlert.alert(data.msg || localStr('lang_ticket_detail_set_status_error'),"",  [
           { text: localStr('lang_ticket_filter_ok'), onPress: () => { } }
         ]);
       }
@@ -1147,13 +1171,14 @@ export default class TicketDetail extends Component {
     let RejectUser = this.state.rejectData.userName
     let rejectTime = moment(this.state.rejectData.createTime).format('YYYY-MM-DD HH:mm:ss');
     return (
-      <View style={{ backgroundColor: '#fff', padding: 16, margin: 16, marginBottom: 0, borderRadius: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ fontSize: 16, color: '#333', fontWeight: '600' }}>{localStr('lang_ticket_detail_reject_reason')}</Text>
+      <View style={{ backgroundColor: Colors.seWarningBg, padding: 16, marginBottom: 0, flexDirection:'row'}}>
+        <Image source={require('./images/reject/Union.png')} style={{width: 14, height: 14, marginTop: 3}}/>
+        <View style={{marginLeft: 8}}>
+          <Text style={{ fontSize: 14, color: Colors.seTextTitle, }}>{localStr('lang_ticket_detail_reject_reason')}</Text>
+          <Text style={{ fontSize: 14, color: Colors.seTextTitle, marginTop: 6}}>{reason}</Text>
+          <Text style={{ fontSize: 12, color: Colors.seTextSecondary, marginTop: 6 }}>{`${RejectUser}  ${rejectTime}`}</Text>
         </View>
-        <View style={{ height: 1, backgroundColor: '#f2f2f2', marginRight: -16, marginTop: 16, marginBottom: 12 }} />
-        <Text style={{ fontSize: 16, color: '#666', lineHeight: 28 }}>{reason}</Text>
-        <Text style={{ fontSize: 12, color: '#b2b2b2', marginTop: 10 }}>{`${RejectUser}  ${rejectTime}`}</Text>
+
       </View>
     )
   }
@@ -1207,7 +1232,7 @@ export default class TicketDetail extends Component {
     const devices = this.state.rowData.assets.map((item, index) => {
       // let canCheck = this.state.isExecutor && (item.extensionProperties && item.extensionProperties.assetPointCheckState === 1) && privilegeHelper.hasAuth(CodeMap.TICKET_MANAGEMENT_FULL)
       let imgUrl = null;
-      let defaultImg = require('./images/building_default/building.png');
+      let defaultImg = isDarkMode() ? require('./images/building_default/placeholder.png') : require('./images/building_default/building.png');
       if (item.extensionProperties && item.extensionProperties?.assetLogo) {
         try {
           let jsonLogo = JSON.parse(item.extensionProperties?.assetLogo);
@@ -1250,16 +1275,16 @@ export default class TicketDetail extends Component {
           onLongPress={() => this._deleteDevice(item, index)}
         >
           <View key={index} style={{
-            flexDirection: 'row', alignItems: 'center', marginTop: 10, borderTopColor: '#f5f5f5',
+            flexDirection: 'row', alignItems: 'center', marginTop: 10, borderTopColor: Colors.seBgLayout,
             borderTopWidth: 1, paddingTop: 10
           }}>
             <View style={{ borderRadius: 8, overflow: 'hidden', }}>
-              <CacheImage borderWidth={0} space={0} key={imgUrl} imageKey={imgUrl} defaultImgPath={defaultImg} width={70} height={50} />
+              <CacheImage borderWidth={0} space={0} key={imgUrl} imageKey={imgUrl} defaultImgPath={defaultImg} width={96} height={54} />
             </View>
 
             <View style={{ marginLeft: 16, flex: 1 }}>
-              <Text style={{ color: '#333', fontSize: 14 }}>{item.assetName}</Text>
-              <Text style={{ color: '#666', fontSize: 12, marginTop: 8 }}>{`${localStr('lang_scan_result_label10')}：${item.code || item.extensionProperties?.assetCode || ''}`}</Text>
+              <Text style={{ color: Colors.seTextTitle, fontSize: 14, fontWeight:'bold' }}>{item.assetName}</Text>
+              <Text style={{ color: Colors.seTextPrimary, fontSize: 12, marginTop: 8 }}>{`${localStr('lang_scan_result_label10')}：${item.code || item.extensionProperties?.assetCode || ''}`}</Text>
             </View>
             {
               this.state.rowData.ticketState === STATE_NOT_START ? null :
@@ -1268,8 +1293,8 @@ export default class TicketDetail extends Component {
                     // ((this.state.localDeviceState && !this.state.localDeviceState[item.assetId] && this.state.localDeviceState[item.assetId] !== 0)
                     // || (!item.status && item.status !== 0)) ?
                     (item.extensionProperties && item.extensionProperties.assetPointCheckState === 1) ?
-                      <Text style={{ fontSize: 12, color: GREEN, marginTop: 8 }}>{this.state.canManual && this._canExecute() ? localStr('lang_ticket_detail_device_check') : ''}</Text> :
-                      <Image style={{ width: 60, height: 60 }} source={DEVICE_STATUS_ICON[item.extensionProperties?.assetPointCheckState]} />
+                      <Text style={{ fontSize: 12, color: Colors.seBrandNomarl, marginTop: 8 }}>{this.state.canManual && this._canExecute() ? localStr('lang_ticket_detail_device_check') : ''}</Text> :
+                      <Image style={{ width: 60, height: 60 }} source={getInventoryIcon(item.extensionProperties?.assetPointCheckState)} />
                   }
                 </TouchFeedback>
             }
@@ -1280,7 +1305,7 @@ export default class TicketDetail extends Component {
     })
     arrStatus[0] = this.state.rowData.assets.length;
     return (
-      <View style={{ margin: 16, marginTop: 0, borderRadius: 12, backgroundColor: '#fff', padding: 16 }}>
+      <View style={{ margin: 16, marginTop: 0, borderRadius: 12, backgroundColor: Colors.seBgContainer, padding: 16 }}>
         {this._renderInventoryTabs(arrStatus)}
         {devices}
       </View>
@@ -1302,8 +1327,8 @@ export default class TicketDetail extends Component {
             let isSel = index === this.state.deviceTab;
             return (
               <TouchableOpacity onPress={() => this.setState({ deviceTab: index })}>
-                <Text style={{ fontSize: 14, color: isSel ? GREEN : '#8C8C8C' }}>{item}</Text>
-                <View style={{ height: 1, marginTop: 12, backgroundColor: isSel ? GREEN : undefined }} />
+                <Text style={{ fontSize: 12, color: isSel ? Colors.seBrandNomarl : Colors.seTextSecondary }}>{item}</Text>
+                <View style={{ height: 1, marginTop: 12, backgroundColor: isSel ? Colors.seBrandNomarl : undefined }} />
               </TouchableOpacity>
             )
           })
@@ -1361,33 +1386,33 @@ export default class TicketDetail extends Component {
         >
           <View style={{
             width: 16, height: 16, justifyContent: 'center', alignItems: 'center', borderRadius: 2, borderWidth: 1,
-            borderColor: '#d9d9d9', marginRight: 6
+            borderColor: Colors.seBorderBase, marginRight: 6
           }}>
             {!m.sel ? null :
-              <Icon type={'icon_check'} color={'#595959'} size={14} />
+              <Icon type={'icon_check'} color={Colors.seGreen} size={14} />
             }
           </View>
-          <Text style={{ fontSize: 14, color: '#595959' }}>{m.title}</Text>
+          <Text style={{ fontSize: 14, color: Colors.seTextPrimary }}>{m.title}</Text>
         </TouchableOpacity>
       )
     })
     return (
       <CommonDialog modalVisible={this.state.submitModalVisible} title={localStr('lang_ticket_detail_approved')}>
-        <View style={{ padding: 16, borderRadius: 12, backgroundColor: '#fff', marginHorizontal: 32 }}>
-          <Text style={{ fontSize: 17, color: '#1f1f1f', fontWeight: '600', alignSelf: 'center' }}>{localStr('lang_ticket_detail_approved')}</Text>
+        <View style={{ padding: 16, borderRadius: 12, backgroundColor: Colors.seBgElevated, marginHorizontal: 32 }}>
+          <Text style={{ fontSize: 17, color: Colors.seTextTitle, fontWeight: '600', alignSelf: 'center' }}>{localStr('lang_ticket_detail_approved')}</Text>
           {menus}
           <View style={{
-            borderTopColor: '#bfbfbf', flexDirection: 'row', height: 40, borderTopWidth: 1, marginHorizontal: -16,
+            borderTopColor: Colors.seTextDisabled, flexDirection: 'row', height: 40, borderTopWidth: 1, marginHorizontal: -16,
             marginBottom: -16, marginTop: 16
           }}>
             <TouchableOpacity style={{ flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' }}
               onPress={() => this.setState({ submitModalVisible: false })}>
-              <Text style={{ color: '#3491FA', fontSize: 17 }}>{localStr('lang_ticket_filter_cancel')}</Text>
+              <Text style={{ color: Colors.seInfoNormal, fontSize: 17 }}>{localStr('lang_ticket_filter_cancel')}</Text>
             </TouchableOpacity>
-            <View style={{ width: 1, backgroundColor: '#bfbfbf' }} />
+            <View style={{ width: 1, backgroundColor: Colors.seTextDisabled }} />
             <TouchableOpacity style={{ flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' }}
               onPress={() => this._approveTicket()}>
-              <Text style={{ color: '#3491FA', fontSize: 17 }}>{localStr("lang_ticket_filter_ok")}</Text>
+              <Text style={{ color: Colors.seInfoNormal, fontSize: 17 }}>{localStr("lang_ticket_filter_ok")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1400,17 +1425,17 @@ export default class TicketDetail extends Component {
   render() {
     if (!this.state.isFetching && this.state.errorMessage) {
       return (
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
+        <View style={{ flex: 1, backgroundColor: Colors.seBgContainer }}>
           {this._getToolbar(this.props.rowData)}
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 17, color: GRAY }}>{this.state.errorMessage}</Text>
+            <Text style={{ fontSize: 17, color: Colors.text.sub }}>{this.state.errorMessage}</Text>
           </View>
         </View>
       )
     }
     if (this.state.isFetching || !this.state.rowData) {
       return (
-        <View style={{ flex: 1, backgroundColor: 'white' }}>
+        <View style={{ flex: 1, backgroundColor: Colors.seBgContainer }}>
           {this._getToolbar(this.state.rowData)}
           <Loading />
         </View>
@@ -1428,7 +1453,7 @@ export default class TicketDetail extends Component {
     if (bottomButton) {
       if (Platform.OS === 'ios') {
         bottomButton = (
-          <View style={{ backgroundColor: '#fff' }}>
+          <View style={{ backgroundColor: Colors.background.white }}>
             <View style={{ marginBottom: (isPhoneX() ? 32 : 16) }}>
               {bottomButton}
             </View>
@@ -1436,7 +1461,7 @@ export default class TicketDetail extends Component {
         );
       } else {
         bottomButton = (
-          <View style={{ marginBottom: (isPhoneX() ? 32 : 16) }}>
+          <View style={{ paddingBottom: 16, backgroundColor: Colors.seBgContainer , height: 84}}>
             {bottomButton}
           </View>
         );
@@ -1444,23 +1469,21 @@ export default class TicketDetail extends Component {
     }
 
     return (
-      <View style={{ flex: 1, backgroundColor: LIST_BG }}>
+      <View style={{ flex: 1, backgroundColor: Colors.seBgLayout}}>
         {this._getToolbar(this.state.rowData)}
-        <ScrollView showsVerticalScrollIndicator={false} style={[styles.wrapper, marginBottom]}>
-          <ViewShot style={{ flex: 1, backgroundColor: LIST_BG }} ref="viewShot" options={{ format: "jpg", quality: 0.9 }}>
+        <ScrollView showsVerticalScrollIndicator={false} style={[styles.wrapper]}>
+          <ViewShot style={{ flex: 1, backgroundColor: Colors.seBgLayout}} ref="viewShot" options={{ format: "jpg", quality: 0.9 }}>
             {/*{this._getAssetView()}*/}
             {this._renderRejection()}
             {this._renderInventoryTicketInfo()}
             {this._renderInventoryDeviceList()}
             {/* {this._renderRejection()} */}
-            <View style={{ height: 1, backgroundColor: '#f2f2f2', marginLeft: 16 }} />
+            <View style={{ height: 1, backgroundColor: Colors.seBorderSplit, marginLeft: 16 }} />
             {/*{this._getTaskView()}*/}
-            <View style={{ height: 1, backgroundColor: '#f2f2f2', marginLeft: 16 }} />
+            <View style={{ height: 1, backgroundColor: Colors.seBorderSplit, marginLeft: 16 }} />
             {/*{this._getDocumentsView()}*/}
             {/* {this._getLogMessage()} */}
             {this._getIDView()}
-            <View style={{ height: 10, flex: 1, backgroundColor: LIST_BG }}>
-            </View>
           </ViewShot>
         </ScrollView>
         {bottomButton}

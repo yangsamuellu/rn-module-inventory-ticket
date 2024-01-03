@@ -4,6 +4,7 @@ import RNFetchBlobFile from "react-native-fetch-blob/class/RNFetchBlobFile";
 import privilegeHelper from "../utils/privilegeHelper";
 import { localStr } from "../utils/Localizations/localization";
 import { DeviceEventEmitter } from "react-native";
+import {getLanguage} from "../../../../app/utils/Localizations/localization";
 let _BASEURL = '';
 
 export function getBaseUri() {
@@ -14,13 +15,22 @@ export function getCookie() {
   return setCookie;
 }
 
+function configLan(){
+  let lan = getLanguage()
+  if(lan === 'en') {
+    return `en-US`
+  }
+  return `zh-CN`
+}
+
 let defaultFetch = async function (options) {
 
   let baseUrl = getBaseUri();
   let headers = {
     "Content-Type": "application/json",
     'Accept': 'application/json',
-    'Cache-Control': 'no-store'
+    'Cache-Control': 'no-store',
+    'Accept-Language':configLan(),
   };
   //headers[tokenKey] = token;
   //headers['Cookie'] = token;
@@ -118,7 +128,7 @@ let defaultFetch = async function (options) {
       //   console.log('data',data)
       //   return data//reader.result;
       // }
-      console.log('\n请求参数:' + body + '\n请求地址:' + url + '\n请求结果:' + data + '\n\n' + JSON.stringify(data) + '\n\n');
+      console.log('\n请求参数:' + body + '\n请求地址:' + url + '\n请求结果:' + data + '\n\n' + JSON.stringify(data) + '\n\n',data);
 
       return data;
     }).catch(err => {

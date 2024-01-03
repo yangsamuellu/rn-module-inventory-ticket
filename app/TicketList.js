@@ -15,11 +15,12 @@ import { localStr } from "./utils/Localizations/localization";
 import TicketDetail from "./TicketDetail";
 import {
   apiAppTicketList,
-  apiHierarchyList,
+  apiHierarchyList, customerId,
 } from "./middleware/bff";
 
 import { isPhoneX } from "./utils";
 import privilegeHelper, { CodeMap } from "./utils/privilegeHelper";
+import Colors, {isDarkMode} from "../../../app/utils/const/Colors";
 
 const MP = Platform.OS === 'ios' ? (isPhoneX() ? 0 : 10) : 36;
 const CODE_OK = '0';
@@ -68,16 +69,16 @@ export default class TicketList extends Component {
   _renderEmpty() {
     if (!this.state.refreshing && this.state.error) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f2f2f2' }}>
-          <Text style={{ fontSize: 15, color: '#888', marginTop: 8 }}>{this.state.error}</Text>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.seBgContainer }}>
+          <Text style={{ fontSize: 15, color: Colors.seTextPrimary, marginTop: 8 }}>{this.state.error}</Text>
         </View>
       )
     }
     if (this.state.refreshing) return null;
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center',backgroundColor:'#fff', height: (Dimensions.get('window').height - 220) }}>
-        <Image source={require('./images/empty_box/empty_box.png')} style={{ width: 60, height: 40 }} />
-        <Text style={{ fontSize: 15, color: '#888', marginTop: 8 }}>{localStr('lang_empty_data')}</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center',backgroundColor:Colors.seBgContainer, height: (Dimensions.get('window').height - 220) }}>
+        <Image resizeMode={'contain'} source={isDarkMode() ? require('./images/empty_box/empty_box_dark.png') : require('./images/empty_box/empty_box.png')} style={{width: 128 * 0.5, height: 80 * 0.5}} />
+        <Text style={{ fontSize: 14, color: Colors.seTextDisabled, marginTop: 8 }}>{localStr('lang_empty_data')}</Text>
       </View>
     )
   }
@@ -87,20 +88,12 @@ export default class TicketList extends Component {
    * @private
    */
   _loadApiHierarchyList() {
-    apiHierarchyList({
-      customerId: 1,
-      treeType: 'fmhc',
-      type: '1'
-    }).then((res) => {
-      this.setState({
-        locations: res.data
-      }, () => {
-        this._loadTicketList();
-        ///第一次进入需要获取一下已完成的个数
-        this._loadDoneCount();
-      })
-    }).catch((reason) => {
-
+    this.setState({
+      locations: this.props.hierarchyList
+    }, () => {
+      this._loadTicketList();
+      ///第一次进入需要获取一下已完成的个数
+      this._loadDoneCount();
     })
   }
 
@@ -163,7 +156,7 @@ export default class TicketList extends Component {
 
 
   _loadTicketList() {
-    this.setState({ refreshing: true, showEmpty: false, ticketData: [], error: null })
+    this.setState({ refreshing: true, showEmpty: false, error: null })
     //处理加载中等...
     let locations = [];
     for (const re of this.state.locations) {
@@ -178,6 +171,7 @@ export default class TicketList extends Component {
       locations: locations,
       pageIndex: this.state.pageIndex,
       pageSize: 20,
+      customerId: customerId,
     };
     apiAppTicketList(params).then((data) => {
       if (data.code === CODE_OK) {
@@ -189,10 +183,9 @@ export default class TicketList extends Component {
         }
         ///处理分页逻辑
         let tickets = [];
-        let hasMoreData = false;
+        let hasMoreData = (responseObj.list?.length >= responseObj.pageSize);
         if (this.state.pageIndex === 1) {
           tickets = responseObj.list;
-          hasMoreData = !(responseObj.pageSize >= responseObj.list?.length);
         } else {
           tickets = this.state.ticketData[0].data.concat(responseObj.list);
         }
@@ -281,15 +274,15 @@ export default class TicketList extends Component {
   _getView() {
     if (this.state.showEmpty) return this._renderEmpty();
     return (
-      <SectionList style={{ flex: 1, paddingHorizontal: 16, backgroundColor: 'white' }}
+      <SectionList style={{ flex: 1, paddingHorizontal: 16, backgroundColor: Colors.seBgContainer }}
         sections={this.state.ticketData}
         refreshControl={
           <RefreshControl
             refreshing={this.state.refreshing}
             onRefresh={this._onRefresh}
-            tintColor={GREEN}
+            tintColor={Colors.theme}
             title={localStr('lang_load_more')}
-            colors={[GREEN]}
+            colors={[Colors.theme]}
             progressBackgroundColor={'white'}
           />
         }
@@ -308,7 +301,7 @@ export default class TicketList extends Component {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 }}>
         <Image source={require('./images/empty_box/empty_box.png')} style={{ width: 60, height: 40 }} />
-        <Text style={{ fontSize: 15, color: '#888', marginTop: 8 }}>{localStr('lang_ticket_list_no_permission')}</Text>
+        <Text style={{ fontSize: 15, color: Colors.seTextSecondary, marginTop: 8 }}>{localStr('lang_ticket_list_no_permission')}</Text>
       </View>
     );
   }
@@ -323,7 +316,7 @@ export default class TicketList extends Component {
         borderTopRightRadius: 8,
         borderTopLeftRadius: 8,
         overflow: 'hidden',
-        backgroundColor: 'white'
+        backgroundColor: Colors.seBgContainer
       }}>
         <View style={{ flexDirection: 'row' }}>
           <Pressable onPress={() => {
@@ -336,7 +329,7 @@ export default class TicketList extends Component {
             <Text style={{
               fontSize: 14,
               fontWeight: this.state.selectedIndex === 0 ? 'bold' : 'normal',
-              color: this.state.selectedIndex === 0 ? '#3dcd58' : '#666'
+              color: this.state.selectedIndex === 0 ? Colors.seBrandNomarl : Colors.seTextPrimary
             }}>{`${localStr('lang_ticket_list_tab_undone')}(${this.state.unDoneCount})`}</Text>
           </Pressable>
           <Pressable onPress={() => {
@@ -349,11 +342,11 @@ export default class TicketList extends Component {
             <Text style={{
               fontSize: 14,
               fontWeight: this.state.selectedIndex === 1 ? 'bold' : 'normal',
-              color: this.state.selectedIndex === 1 ? '#3dcd58' : '#666'
+              color: this.state.selectedIndex === 1 ? Colors.seBrandNomarl : Colors.seTextPrimary
             }}>{`${localStr('lang_ticket_list_tab_done')}(${this.state.doneCount})`}</Text>
           </Pressable>
         </View>
-        <View style={{ position: 'absolute', left: 12, right: 12, bottom: 0, backgroundColor: "#eee", height: 1 }} />
+        <View style={{ position: 'absolute', left: 12, right: 12, bottom: 0, backgroundColor: Colors.seBorderSplit, height: 1 }} />
       </View>
     )
   }
@@ -364,8 +357,8 @@ export default class TicketList extends Component {
     }
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-        <View style={{ flex: 1, backgroundColor: '#3DCD58' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.seBgContainer }}>
+        <View style={{ flex: 1 , backgroundColor: Colors.seBrandNomarl}}>
           {this._renderSectionHeader()}
           {this._getView()}
         </View>

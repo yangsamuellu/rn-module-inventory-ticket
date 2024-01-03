@@ -14,6 +14,8 @@ import ScanView from './components/Scanner';
 import Permissions, { PERMISSIONS, RESULTS, request, check } from 'react-native-permissions';
 import ScanResult from "./ScanResult";
 import { openCamera } from 'react-native-image-crop-picker';
+import SndAlert from "../../../app/utils/components/SndAlert";
+import Colors, {isDarkMode} from "../../../app/utils/const/Colors";
 
 
 export default class Scan extends Component {
@@ -74,7 +76,7 @@ export default class Scan extends Component {
         }
       } else {
         this.setState({ openCamera: false });
-        Alert.alert(localStr("lang_scan_page_alert_error_title"), localStr('lang_scan_page_alert_error_content'),
+        SndAlert.alert(localStr("lang_scan_page_alert_error_title"), localStr('lang_scan_page_alert_error_content'),
           [
             {
               text: localStr('lang_scan_page_alert_error_button'), onPress: () => {
@@ -139,9 +141,9 @@ export default class Scan extends Component {
               this.setState({ hasCameraAuth: true });
             } else {
               this.setState({ hasCameraAuth: false });
-              Alert.alert(
-                '',
+              SndAlert.alert(
                 localStr('lang_image_picker_accept_msg'),
+                '',
                 [
                   { text: localStr('lang_image_picker_cancel'), onPress: () => { } },
                   {
@@ -205,6 +207,22 @@ export default class Scan extends Component {
     })
   }
 
+  _getLightText(flashMode) {
+    let lan = getLanguage();
+    //{`${this.state.flashMode === 'on' ? localStr('lang_scan_page_light_off') : localStr('lang_scan_page_light_on')}${localStr('lang_scan_page_light')}`}</Text>
+    if(lan === 'en')
+      return `${localStr('lang_scan_page_light')} ${this.state.flashMode === 'on' ? localStr('lang_scan_page_light_off') : localStr('lang_scan_page_light_on')}`
+    return `${this.state.flashMode === 'on' ? localStr('lang_scan_page_light_off') : localStr('lang_scan_page_light_on')}${localStr('lang_scan_page_light')} `
+  }
+
+  _getLightIcon (){
+    if (isDarkMode()){
+      return this.state.flashMode === 'on' ? require('./images/scan_light/light_on_dark.png') : require('./images/scan_light/light_off_dark.png')
+    }else {
+      return this.state.flashMode === 'on' ? require('./images/scan_light/light_on_light.png') : require('./images/scan_light/light_off_light.png')
+    }
+  }
+
   render() {
     return (
       <View style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -229,12 +247,13 @@ export default class Scan extends Component {
             })
           }}
           onBarCodeRead={(data) => this._getScanData(data?.data)} />
-        <View style={{ height: 160, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ height: 160, backgroundColor: Colors.seBgContainer, alignItems: 'center', justifyContent: 'center' }}>
           <TouchableOpacity onPress={() => this._didSwitchLight()}>
-            <Image style={{ width: 56, height: 56 }} source={this.state.flashMode != 'on' ? require('./images/scan_light/light_off.png') : require('./images/scan_light/light_on.png')} />
+            <Image style={{ width: 56, height: 56,}} source={this._getLightIcon()}/>
           </TouchableOpacity>
-          <Text style={{ color: '#595959', fontSize: 16, marginTop: 12 }}>
-            {`${this.state.flashMode === 'on' ? localStr('lang_scan_page_light_off') : localStr('lang_scan_page_light_on')}${localStr('lang_scan_page_light')}`}</Text>
+          <Text style={{ color: Colors.seTextPrimary, fontSize: 16, marginTop: 12 }}>
+            {this._getLightText(this.state.flashMode)}
+          </Text>
         </View>
         <TouchableOpacity style={{ position: 'absolute', left: 22, top: 44 }}
           onPress={() => this.props.navigator.pop()}
